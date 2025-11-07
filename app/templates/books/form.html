@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Biblioteca Personal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <!-- Título -->
+                                <div class="mb-3">
+                                    {{ form.title.label(class="form-label") }}
+                                    {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                                    {% if form.title.errors %}
+                                        <div class="invalid-feedback">{{ form.title.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Autores -->
+                                <div class="mb-3">
+                                    {{ form.authors.label(class="form-label") }}
+                                    {{ form.authors(class="form-control" + (" is-invalid" if form.authors.errors else "")) }}
+                                    <small class="form-text text-muted">{{ form.authors.description }}</small>
+                                    {% if form.authors.errors %}
+                                        <div class="invalid-feedback">{{ form.authors.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row">
+                                    <!-- ISBN -->
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.isbn.label(class="form-label") }}
+                                        <div class="input-group">
+                                            {{ form.isbn(class="form-control" + (" is-invalid" if form.isbn.errors else ""), id="isbnInput") }}
+                                            <button type="button" class="btn btn-outline-secondary" id="lookupBtn" title="Buscar en Google Books">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
+                                        {% if form.isbn.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.isbn.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Año -->
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.publication_year.label(class="form-label") }}
+                                        {{ form.publication_year(class="form-control" + (" is-invalid" if form.publication_year.errors else "")) }}
+                                        {% if form.publication_year.errors %}
+                                            <div class="invalid-feedback">{{ form.publication_year.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Editorial -->
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.publisher.label(class="form-label") }}
+                                        {{ form.publisher(class="form-control" + (" is-invalid" if form.publisher.errors else "")) }}
+                                        {% if form.publisher.errors %}
+                                            <div class="invalid-feedback">{{ form.publisher.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Género -->
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.genre.label(class="form-label") }}
+                                        {{ form.genre(class="form-control" + (" is-invalid" if form.genre.errors else "")) }}
+                                        {% if form.genre.errors %}
+                                            <div class="invalid-feedback">{{ form.genre.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Tipo -->
+                                    <div class="col-md-4 mb-3">
+                                        {{ form.book_type.label(class="form-label") }}
+                                        {{ form.book_type(class="form-select" + (" is-invalid" if form.book_type.errors else "")) }}
+                                        {% if form.book_type.errors %}
+                                            <div class="invalid-feedback">{{ form.book_type.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Estado -->
+                                    <div class="col-md-4 mb-3">
+                                        {{ form.status.label(class="form-label") }}
+                                        {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                                        {% if form.status.errors %}
+                                            <div class="invalid-feedback">{{ form.status.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Formato -->
+                                    <div class="col-md-4 mb-3">
+                                        {{ form.format.label(class="form-label") }}
+                                        {{ form.format(class="form-control" + (" is-invalid" if form.format.errors else "")) }}
+                                        <small class="form-text text-muted">{{ form.format.description }}</small>
+                                        {% if form.format.errors %}
+                                            <div class="invalid-feedback">{{ form.format.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Ubicación -->
+                                <div class="mb-3">
+                                    {{ form.location.label(class="form-label") }}
+                                    {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else "")) }}
+                                    <small class="form-text text-muted">{{ form.location.description }}</small>
+                                    {% if form.location.errors %}
+                                        <div class="invalid-feedback">{{ form.location.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row">
+                                    <!-- Fecha de Adquisición -->
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.acquisition_date.label(class="form-label") }}
+                                        {{ form.acquisition_date(class="form-control" + (" is-invalid" if form.acquisition_date.errors else ""), type="date") }}
+                                        {% if form.acquisition_date.errors %}
+                                            <div class="invalid-feedback">{{ form.acquisition_date.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Precio -->
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.price.label(class="form-label") }}
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            {{ form.price(class="form-control" + (" is-invalid" if form.price.errors else "")) }}
+                                        </div>
+                                        {% if form.price.errors %}
+                                            <div class="invalid-feedback">{{ form.price.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Descripción -->
+                                <div class="mb-3">
+                                    {{ form.description.label(class="form-label") }}
+                                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3) }}
+                                    {% if form.description.errors %}
+                                        <div class="invalid-feedback">{{ form.description.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Notas -->
+                                <div class="mb-3">
+                                    {{ form.notes.label(class="form-label") }}
+                                    {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=3) }}
+                                    {% if form.notes.errors %}
+                                        <div class="invalid-feedback">{{ form.notes.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Etiquetas -->
+                                <div class="mb-3">
+                                    {{ form.tags.label(class="form-label") }}
+                                    {{ form.tags(class="form-control" + (" is-invalid" if form.tags.errors else "")) }}
+                                    <small class="form-text text-muted">{{ form.tags.description }}</small>
+                                    {% if form.tags.errors %}
+                                        <div class="invalid-feedback">{{ form.tags.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <!-- Portada -->
+                                <div class="mb-3">
+                                    <label class="form-label">Portada</label>
+                                    <div id="coverPreview" class="mb-3">
+                                        {% if book and book.cover_image %}
+                                            <img src="{{ book.cover_image if book.cover_image.startswith('http') else url_for('static', filename=book.cover_image) }}"
+                                                 class="img-fluid" alt="Portada actual">
+                                        {% else %}
+                                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                                                <i class="bi bi-image" style="font-size: 4rem; color: #ccc;"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    {{ form.cover_image.label(class="form-label") }}
+                                    {{ form.cover_image(class="form-control" + (" is-invalid" if form.cover_image.errors else "")) }}
+                                    {% if form.cover_image.errors %}
+                                        <div class="invalid-feedback">{{ form.cover_image.errors[0] }}</div>
+                                    {% endif %}
+
+                                    <div class="my-2 text-center">
+                                        <small class="text-muted">O</small>
+                                    </div>
+
+                                    {{ form.cover_file.label(class="form-label") }}
+                                    {{ form.cover_file(class="form-control" + (" is-invalid" if form.cover_file.errors else "")) }}
+                                    {% if form.cover_file.errors %}
+                                        <div class="invalid-feedback">{{ form.cover_file.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('books.index') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Buscar libro por ISBN en Google Books
+document.getElementById('lookupBtn')?.addEventListener('click', async function() {
+    const isbn = document.getElementById('isbnInput').value;
+    if (!isbn) {
+        alert('Por favor ingresa un ISBN');
+        return;
+    }
+
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    try {
+        const response = await fetch(`/api/google-books/${isbn}`);
+        const data = await response.json();
+
+        if (data.success) {
+            // Rellenar campos
+            const bookData = data.data;
+            if (bookData.title) document.querySelector('#title').value = bookData.title;
+            if (bookData.authors) document.querySelector('#authors').value = bookData.authors;
+            if (bookData.publisher) document.querySelector('#publisher').value = bookData.publisher;
+            if (bookData.publication_year) document.querySelector('#publication_year').value = bookData.publication_year;
+            if (bookData.genre) document.querySelector('#genre').value = bookData.genre;
+            if (bookData.description) document.querySelector('#description').value = bookData.description;
+            if (bookData.cover_image) document.querySelector('#cover_image').value = bookData.cover_image;
+
+            alert('Información del libro cargada exitosamente');
+        } else {
+            alert(data.error || 'No se encontró información para este ISBN');
+        }
+    } catch (error) {
+        alert('Error al buscar el libro: ' + error.message);
+    } finally {
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-search"></i>';
+    }
+});
+</script>
+{% endblock %}

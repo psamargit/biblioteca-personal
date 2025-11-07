@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} - Biblioteca Personal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Portada -->
+            <div class="card mb-3">
+                {% if book.cover_image %}
+                    <img src="{{ book.cover_image if book.cover_image.startswith('http') else url_for('static', filename=book.cover_image) }}"
+                         class="card-img-top" alt="{{ book.title }}">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="bi bi-book" style="font-size: 6rem; color: #ccc;"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Acciones -->
+            <div class="d-grid gap-2 mb-3">
+                <a href="{{ url_for('books.edit', id=book.id) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                {% if book.is_available %}
+                    <a href="{{ url_for('loans.add', book_id=book.id) }}" class="btn btn-success">
+                        <i class="bi bi-arrow-left-right"></i> Prestar
+                    </a>
+                {% else %}
+                    <button class="btn btn-secondary" disabled>
+                        <i class="bi bi-x-circle"></i> Prestado
+                    </button>
+                {% endif %}
+                <form method="POST" action="{{ url_for('books.delete', id=book.id) }}"
+                      onsubmit="return confirm('¿Estás seguro de que quieres eliminar este libro?');">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h1 class="display-6">{{ book.title }}</h1>
+                    <p class="lead text-muted">{{ book.authors }}</p>
+                </div>
+                <a href="{{ url_for('books.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <!-- Estado y Tipo -->
+            <div class="mb-4">
+                {% if book.book_type == 'physical' %}
+                    <span class="badge bg-success fs-6">Físico</span>
+                {% else %}
+                    <span class="badge bg-info fs-6">Digital</span>
+                {% endif %}
+
+                {% if book.status == 'read' %}
+                    <span class="badge bg-success fs-6">Leído</span>
+                {% elif book.status == 'reading' %}
+                    <span class="badge bg-primary fs-6">Leyendo</span>
+                {% else %}
+                    <span class="badge bg-secondary fs-6">No leído</span>
+                {% endif %}
+
+                {% if not book.is_available %}
+                    <span class="badge bg-danger fs-6">Prestado</span>
+                {% endif %}
+            </div>
+
+            <!-- Información del Libro -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Información del Libro</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            {% if book.isbn %}
+                            <tr>
+                                <th style="width: 30%;">ISBN:</th>
+                                <td>{{ book.isbn }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if book.publisher %}
+                            <tr>
+                                <th>Editorial:</th>
+                                <td>{{ book.publisher }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if book.publication_year %}
+                            <tr>
+                                <th>Año:</th>
+                                <td>{{ book.publication_year }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if book.genre %}
+                            <tr>
+                                <th>Género:</th>
+                                <td>{{ book.genre }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if book.format %}
+                            <tr>
+                                <th>Formato:</th>
+                                <td>{{ book.format }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if book.location %}
+                            <tr>
+                                <th>Ubicación:</th>
+                                <td>{{ book.location }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if book.acquisition_date %}
+                            <tr>
+                                <th>Fecha de Adquisición:</th>
+                                <td>{{ format_date(book.acquisition_date) }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if book.price %}
+                            <tr>
+                                <th>Precio:</th>
+                                <td>${{ "%.2f"|format(book.price) }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Descripción -->
+            {% if book.description %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Descripción</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ book.description }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Notas Personales -->
+            {% if book.notes %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Notas Personales</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ book.notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Etiquetas -->
+            {% if book.tags %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Etiquetas</h5>
+                </div>
+                <div class="card-body">
+                    {% for tag in book.tags %}
+                        <span class="badge" style="background-color: {{ tag.color }}; font-size: 0.9rem;">
+                            {{ tag.name }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Préstamo Activo -->
+            {% if book.current_loan %}
+            <div class="card border-warning mb-3">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Libro Prestado</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Prestatario:</strong> {{ book.current_loan.borrower_name }}</p>
+                    <p><strong>Fecha de Préstamo:</strong> {{ format_date(book.current_loan.loan_date) }}</p>
+                    <p><strong>Fecha de Devolución:</strong> {{ format_date(book.current_loan.due_date) }}</p>
+                    {% if book.current_loan.is_overdue %}
+                        <div class="alert alert-danger mb-0">
+                            <i class="bi bi-clock"></i> Vencido hace {{ book.current_loan.days_overdue }} días
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-clock"></i> Quedan {{ book.current_loan.days_until_due }} días
+                        </p>
+                    {% endif %}
+                    <a href="{{ url_for('loans.detail', id=book.current_loan.id) }}" class="btn btn-sm btn-warning mt-2">
+                        Ver Detalles del Préstamo
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Metadata -->
+            <div class="text-muted small">
+                <p class="mb-0">
+                    <i class="bi bi-calendar-plus"></i> Agregado: {{ format_date(book.created_at, '%d/%m/%Y %H:%M') }}
+                </p>
+                {% if book.updated_at != book.created_at %}
+                <p class="mb-0">
+                    <i class="bi bi-calendar-check"></i> Última actualización: {{ format_date(book.updated_at, '%d/%m/%Y %H:%M') }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

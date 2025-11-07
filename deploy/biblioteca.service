@@ -1,0 +1,21 @@
+[Unit]
+Description=Biblioteca Personal - Flask Application
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/biblioteca-personal
+Environment="PATH=/var/www/biblioteca-personal/venv/bin"
+Environment="FLASK_ENV=production"
+ExecStart=/var/www/biblioteca-personal/venv/bin/gunicorn -c gunicorn_config.py run:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

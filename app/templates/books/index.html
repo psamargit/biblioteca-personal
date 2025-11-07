@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Libros - Biblioteca Personal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5"><i class="bi bi-book-half"></i> Mis Libros</h1>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('books.add') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Agregar Libro
+            </a>
+            <a href="{{ url_for('books.import_books') }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-arrow-up"></i> Importar
+            </a>
+            <a href="{{ url_for('books.export') }}" class="btn btn-secondary">
+                <i class="bi bi-file-earmark-arrow-down"></i> Exportar
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('books.index') }}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="q" class="form-control" placeholder="Buscar por título, autor, ISBN..."
+                               value="{{ request.args.get('q', '') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="type" class="form-select">
+                            <option value="">Todos los tipos</option>
+                            <option value="physical" {{ 'selected' if request.args.get('type') == 'physical' }}>Físicos</option>
+                            <option value="digital" {{ 'selected' if request.args.get('type') == 'digital' }}>Digitales</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select">
+                            <option value="">Todos los estados</option>
+                            <option value="read" {{ 'selected' if request.args.get('status') == 'read' }}>Leídos</option>
+                            <option value="reading" {{ 'selected' if request.args.get('status') == 'reading' }}>Leyendo</option>
+                            <option value="unread" {{ 'selected' if request.args.get('status') == 'unread' }}>No leídos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="genre" class="form-select">
+                            <option value="">Todos los géneros</option>
+                            {% for genre in genres %}
+                                <option value="{{ genre }}" {{ 'selected' if request.args.get('genre') == genre }}>{{ genre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Vista Toggle -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <p class="mb-0">{{ pagination.total }} libros encontrados</p>
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('books.index', view='table', **request.args) }}"
+               class="btn btn-sm btn-outline-secondary {{ 'active' if view_mode == 'table' }}">
+                <i class="bi bi-list"></i> Tabla
+            </a>
+            <a href="{{ url_for('books.index', view='cards', **request.args) }}"
+               class="btn btn-sm btn-outline-secondary {{ 'active' if view_mode == 'cards' }}">
+                <i class="bi bi-grid"></i> Tarjetas
+            </a>
+        </div>
+    </div>
+
+    {% if books %}
+        {% if view_mode == 'table' %}
+            <!-- Vista de Tabla -->
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 60px;"></th>
+                                <th>Título</th>
+                                <th>Autor(es)</th>
+                                <th>Género</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in books %}
+                                <tr>
+                                    <td>
+                                        {% if book.cover_image %}
+                                            <img src="{{ book.cover_image if book.cover_image.startswith('http') else url_for('static', filename=book.cover_image) }}"
+                                                 alt="{{ book.title }}" class="img-thumbnail" style="width: 40px; height: 60px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 60px;">
+                                                <i class="bi bi-book text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ book.title }}</strong>
+                                        {% if book.isbn %}<br><small class="text-muted">ISBN: {{ book.isbn }}</small>{% endif %}
+                                    </td>
+                                    <td>{{ book.authors }}</td>
+                                    <td>{{ book.genre or '-' }}</td>
+                                    <td>
+                                        {% if book.book_type == 'physical' %}
+                                            <span class="badge bg-success">Físico</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Digital</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if book.status == 'read' %}
+                                            <span class="badge bg-success">Leído</span>
+                                        {% elif book.status == 'reading' %}
+                                            <span class="badge bg-primary">Leyendo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No leído</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('books.detail', id=book.id) }}" class="btn btn-sm btn-outline-primary" title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('books.edit', id=book.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <!-- Vista de Tarjetas -->
+            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+                {% for book in books %}
+                    <div class="col">
+                        <div class="card h-100">
+                            {% if book.cover_image %}
+                                <img src="{{ book.cover_image if book.cover_image.startswith('http') else url_for('static', filename=book.cover_image) }}"
+                                     class="card-img-top" alt="{{ book.title }}" style="height: 250px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                                    <i class="bi bi-book" style="font-size: 4rem; color: #ccc;"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title">{{ book.title | truncate(40) }}</h6>
+                                <p class="card-text small text-muted">{{ book.authors | truncate(50) }}</p>
+                                <div class="mt-auto">
+                                    <div class="mb-2">
+                                        {% if book.book_type == 'physical' %}
+                                            <span class="badge bg-success">Físico</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Digital</span>
+                                        {% endif %}
+                                        {% if book.status == 'read' %}
+                                            <span class="badge bg-success">Leído</span>
+                                        {% elif book.status == 'reading' %}
+                                            <span class="badge bg-primary">Leyendo</span>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{{ url_for('books.detail', id=book.id) }}" class="btn btn-sm btn-outline-primary w-100">Ver Detalles</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Paginación -->
+        {% if pagination.pages > 1 %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+                        <a class="page-link" href="{{ url_for('books.index', page=pagination.prev_num, **request.args) }}">Anterior</a>
+                    </li>
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            <li class="page-item {{ 'active' if page_num == pagination.page }}">
+                                <a class="page-link" href="{{ url_for('books.index', page=page_num, **request.args) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+                        <a class="page-link" href="{{ url_for('books.index', page=pagination.next_num, **request.args) }}">Siguiente</a>
+                    </li>
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No se encontraron libros con los criterios de búsqueda.
+            <a href="{{ url_for('books.index') }}">Limpiar filtros</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
