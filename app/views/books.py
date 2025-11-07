@@ -8,7 +8,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_
 from app import db
-from app.models import Book, Tag
+from app.models import Book, Tag, Owner
 from app.forms import BookForm, SearchForm, ImportForm
 from app.utils.helpers import save_cover_image, delete_cover_image, parse_csv_date, sanitize_isbn
 
@@ -27,6 +27,7 @@ def index():
     book_type = request.args.get('type', '')
     status = request.args.get('status', '')
     genre = request.args.get('genre', '')
+    owner_id = request.args.get('owner_id', '', type=str)
     view_mode = request.args.get('view', 'table')  # table o cards
 
     # Construir query base
@@ -51,6 +52,9 @@ def index():
     if genre:
         books_query = books_query.filter_by(genre=genre)
 
+    if owner_id:
+        books_query = books_query.filter_by(owner_id=int(owner_id))
+
     # Ordenar por fecha de creación descendente
     books_query = books_query.order_by(Book.created_at.desc())
 
@@ -66,10 +70,14 @@ def index():
     ).distinct().order_by(Book.genre).all()
     genres = [g[0] for g in genres]
 
+    # Obtener propietarios para el filtro
+    owners = Owner.query.filter_by(user_id=current_user.id, is_active=True).order_by(Owner.name).all()
+
     return render_template('books/index.html',
                          books=books,
                          pagination=pagination,
                          genres=genres,
+                         owners=owners,
                          view_mode=view_mode)
 
 
@@ -80,12 +88,17 @@ def search():
     form = SearchForm()
     books = []
 
+    # Poblar opciones de propietarios
+    owners = Owner.query.filter_by(user_id=current_user.id, is_active=True).order_by(Owner.name).all()
+    form.owner_id.choices = [('', 'Todos')] + [(str(o.id), o.name) for o in owners]
+
     if form.validate_on_submit():
         filters = {
             'genre': form.genre.data,
             'author': form.author.data,
             'book_type': form.book_type.data,
             'status': form.status.data,
+            'owner_id': form.owner_id.data,
             'year_from': form.year_from.data,
             'year_to': form.year_to.data
         }
@@ -108,6 +121,10 @@ def add():
     """Agregar un nuevo libro"""
     form = BookForm()
 
+    # Poblar opciones de propietarios
+    owners = Owner.query.filter_by(user_id=current_user.id, is_active=True).order_by(Owner.name).all()
+    form.owner_id.choices = [('', 'Sin asignar')] + [(str(o.id), o.name) for o in owners]
+
     if form.validate_on_submit():
         # Crear libro
         book = Book(
@@ -119,6 +136,7 @@ def add():
             genre=form.genre.data,
             book_type=form.book_type.data,
             status=form.status.data,
+            owner_id=form.owner_id.data,
             location=form.location.data,
             format=form.format.data,
             description=form.description.data,
@@ -171,6 +189,10 @@ def edit(id):
     book = Book.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     form = BookForm(obj=book)
 
+    # Poblar opciones de propietarios
+    owners = Owner.query.filter_by(user_id=current_user.id, is_active=True).order_by(Owner.name).all()
+    form.owner_id.choices = [('', 'Sin asignar')] + [(str(o.id), o.name) for o in owners]
+
     if form.validate_on_submit():
         # Actualizar campos
         book.title = form.title.data
@@ -181,6 +203,7 @@ def edit(id):
         book.genre = form.genre.data
         book.book_type = form.book_type.data
         book.status = form.status.data
+        book.owner_id = form.owner_id.data
         book.location = form.location.data
         book.format = form.format.data
         book.description = form.description.data
@@ -216,9 +239,10 @@ def edit(id):
         flash(f'Libro "{book.title}" actualizado exitosamente', 'success')
         return redirect(url_for('books.detail', id=book.id))
 
-    # Prellenar tags en el formulario
+    # Prellenar tags y owner en el formulario
     if request.method == 'GET':
         form.tags.data = ', '.join([tag.name for tag in book.tags])
+        form.owner_id.data = str(book.owner_id) if book.owner_id else ''
 
     return render_template('books/form.html', form=form, title='Editar Libro', book=book)
 

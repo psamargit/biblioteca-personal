@@ -46,6 +46,7 @@ class Book(db.Model):
 
     # Metadatos
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey('owners.id', ondelete='SET NULL'))  # Propietario del libro (miembro de la familia)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -82,6 +83,8 @@ class Book(db.Model):
             'price': self.price,
             'description': self.description,
             'tags': [tag.name for tag in self.tags],
+            'owner_id': self.owner_id,
+            'owner_name': self.owner.name if self.owner else None,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
@@ -152,5 +155,8 @@ class Book(db.Model):
 
             if 'year_to' in filters and filters['year_to']:
                 books_query = books_query.filter(Book.publication_year <= filters['year_to'])
+
+            if 'owner_id' in filters and filters['owner_id']:
+                books_query = books_query.filter_by(owner_id=filters['owner_id'])
 
         return books_query

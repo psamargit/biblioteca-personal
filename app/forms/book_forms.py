@@ -49,6 +49,10 @@ class BookForm(FlaskForm):
         choices=[('unread', 'No leído'), ('reading', 'Leyendo'), ('read', 'Leído')],
         validators=[DataRequired(message='El estado es requerido')]
     )
+    owner_id = SelectField('Propietario',
+        coerce=lambda x: int(x) if x and x != '' else None,
+        validators=[Optional()]
+    )
     location = StringField('Ubicación', validators=[
         Optional(),
         Length(max=150, message='La ubicación no puede exceder 150 caracteres')
@@ -98,6 +102,10 @@ class SearchForm(FlaskForm):
     )
     status = SelectField('Estado',
         choices=[('', 'Todos'), ('unread', 'No leído'), ('reading', 'Leyendo'), ('read', 'Leído')],
+        validators=[Optional()]
+    )
+    owner_id = SelectField('Propietario',
+        coerce=lambda x: int(x) if x and x != '' else None,
         validators=[Optional()]
     )
     year_from = IntegerField('Año desde', validators=[

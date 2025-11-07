@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}{{ owner.name }} - Propietarios{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                     style="width: 60px; height: 60px; background-color: {{ owner.color }};">
+                    <i class="bi bi-person-fill text-white" style="font-size: 2rem;"></i>
+                </div>
+                <div>
+                    <h1 class="display-6 mb-0">{{ owner.name }}</h1>
+                    {% if owner.relationship %}
+                        <p class="text-muted mb-0">{{ owner.relationship }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('owners.edit', id=owner.id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <a href="{{ url_for('owners.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-white-50">Total Libros</h6>
+                    <h2 class="card-title">{{ stats.total_books }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-white-50">Leídos</h6>
+                    <h2 class="card-title">{{ stats.books_read }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-white-50">Físicos</h6>
+                    <h2 class="card-title">{{ stats.physical_books }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-white-50">Digitales</h6>
+                    <h2 class="card-title">{{ stats.digital_books }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información adicional -->
+    {% if owner.email or owner.notes %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Información Adicional</h5>
+            </div>
+            <div class="card-body">
+                {% if owner.email %}
+                    <p><strong>Email:</strong> {{ owner.email }}</p>
+                {% endif %}
+                {% if owner.notes %}
+                    <p><strong>Notas:</strong> {{ owner.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Libros del propietario -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Libros de {{ owner.name }}</h5>
+            <a href="{{ url_for('books.add') }}" class="btn btn-sm btn-success">
+                <i class="bi bi-plus-circle"></i> Agregar Libro
+            </a>
+        </div>
+        <div class="card-body">
+            {% if books %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Título</th>
+                                <th>Autor(es)</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in books %}
+                                <tr>
+                                    <td><strong>{{ book.title }}</strong></td>
+                                    <td>{{ book.authors }}</td>
+                                    <td>
+                                        {% if book.book_type == 'physical' %}
+                                            <span class="badge bg-success">Físico</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Digital</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if book.status == 'read' %}
+                                            <span class="badge bg-success">Leído</span>
+                                        {% elif book.status == 'reading' %}
+                                            <span class="badge bg-primary">Leyendo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No leído</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('books.detail', id=book.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                {% if pagination.pages > 1 %}
+                    <nav class="mt-3">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+                                <a class="page-link" href="{{ url_for('owners.detail', id=owner.id, page=pagination.prev_num) }}">Anterior</a>
+                            </li>
+                            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                {% if page_num %}
+                                    <li class="page-item {{ 'active' if page_num == pagination.page }}">
+                                        <a class="page-link" href="{{ url_for('owners.detail', id=owner.id, page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                {% endif %}
+                            {% endfor %}
+                            <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+                                <a class="page-link" href="{{ url_for('owners.detail', id=owner.id, page=pagination.next_num) }}">Siguiente</a>
+                            </li>
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <p class="text-muted">{{ owner.name }} no tiene libros asignados aún.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="mt-4">
+        <form method="POST" action="{{ url_for('owners.toggle_active', id=owner.id) }}" class="d-inline">
+            <button type="submit" class="btn btn-warning">
+                {% if owner.is_active %}
+                    <i class="bi bi-pause-circle"></i> Desactivar
+                {% else %}
+                    <i class="bi bi-play-circle"></i> Activar
+                {% endif %}
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('owners.delete', id=owner.id) }}" class="d-inline"
+              onsubmit="return confirm('¿Estás seguro de que quieres eliminar a {{ owner.name }}?');">
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Eliminar
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

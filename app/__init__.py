@@ -51,7 +51,7 @@ def create_app(config_name=None):
     os.makedirs(instance_path, exist_ok=True)
 
     # Registrar blueprints
-    from app.views import auth, books, dashboard, loans, wishlist, api
+    from app.views import auth, books, dashboard, loans, wishlist, api, owners
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(books.bp)
@@ -59,6 +59,7 @@ def create_app(config_name=None):
     app.register_blueprint(loans.bp)
     app.register_blueprint(wishlist.bp)
     app.register_blueprint(api.bp)
+    app.register_blueprint(owners.bp)
 
     # Registrar comandos CLI personalizados
     from app.commands import init_db_command, create_admin_command
